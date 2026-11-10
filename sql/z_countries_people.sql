@@ -1,6 +1,6 @@
 SET NAMES utf8;
 
-DROP TABLE IF EXISTS `countries_people`;
+DROP TABLE IF EXISTS countries_people;
 CREATE TABLE `countries_people` (
   `idcountry` int NOT NULL,
   `idperson` int NOT NULL,

@@ -19,159 +19,197 @@ vous sembler utiles dans le but qu'une autre personne puisse **reproduire**
 votre démarche.
 -->
 
-Voici les étapes que j'ai suivies pour installer XXX, créer une base de données
+Voici les étapes que j'ai suivies pour installer un conteneur mariaDB-docker, créer une base de données
 et y importer les tables :
-  1. ...
-  1. ...
-  1. ...
-  1. ...
+> **Prérequis :** <br> **Un clone du Repo `Kapas3T/kata-sql`** - veillez à ne pas utiliser la version originale de `epfl-dojo`<br> **DBeaverCE** <br> **Docker** - si il n'est pas déja installé. Entrex cette commande dans votre terminal : <br> `curl -s https://scripts.kapas3t.com/install-docker.sh | bash`
+<br>
 
-J'ai choisi d'utiliser XXX comme client de base de données.
+### **Le Choix du SGBD - MariaDB** Le ISAS-FSD utilise très régulièrement ce SGBD. C'est aussi le seul que je connais. Le choix est évident.
 
-J'ai généré le schéma avec XXX:
+1. Dans votre teminal, exécutez ces 3 commandes.
+    ```
+    mkdir ~/docker/mariadb; cd ~/docker/mariadb
+    wget https://scripts.kapas3t.com/docker-compose/mariadb/compose.yaml
+    docker compose up -d
+    ```
+1. Ouvrez DBeaverCE et cliquez sur : `Ctrl + Shift + N`
+1. Séléctionnez `MariaDB`, renseignez les champs suivants : Username: `user`, Password: `password` et cliquez sur `connect`
+1. **Double-clic** sur la DB qui vient d'être crée, **Clic-droit** sur `db` puis `SQL editor > Create new SQL script`
 
-![Mon MLD](schema.jpg "Mon MLD généré avec XXX")
+---
+
+### Client de base de données.
+J'ai choisi d'utiliser DBeaver-CE comme client de base de données.
+
+J'ai généré le schéma avec le `Diagram view` de DBeaver-CE :
+
+![Mon MLD](schema.png "Mon MLD généré avec XXX")
 
 ## Informations à récolter
 
 ### Générales
 
-1. La table `people` contient `NUMBER` personnes, ma requête est :  
+1. La table `people` contient `410` personnes, ma requête est :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT COUNT(*) FROM people;
   ```
 1. Cette requête permet de trouver l'email de la personne dont le nom de
    famille est "Warren" :
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT email FROM people WHERE lastname = 'Warren';
   ```
 1. La table `people` est triée par nom de famille en ordre croissant, ma requête 
    est :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT * FROM people ORDER BY lastname;
   ```
 1. Les 5 premières entrées de la table `people` triée par nom de famille en 
    ordre croissant sont :  
-  ```sql
-  SELECT somecolumns FROM sometable [...];
-  ```
+
+| En SQL: | Avec MariaDB |
+| :--   | :--     |
+| `SELECT TOP 5 * FROM people ORDER BY lastname;` | `SELECT * FROM people ORDER BY lastname LIMIT 5;` |
+
 1. Je trouve toutes les personnes dont le nom ou le prénom contient `ojo`, ma  
    requête est :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT * FROM people WHERE lastname LIKE '%ojo%' OR firstname LIKE '%ojo%';
   ```
 1. Les 5 personnes les plus jeunes sont obtenues avec cette requête :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT * FROM people ORDER BY birthdate DESC LIMIT 5;
   ```
 1. Les 5 personnes les plus agées sont obtenues avec cette requête :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT * FROM people ORDER BY birthdate LIMIT 5;
   ```
 1. La requête suivante permet de trouver l'age (en année) de chaque personne :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT *, YEAR(CURDATE()) - YEAR(birthdate) AS 'age' FROM people;
   ```
-1. La moyenne d'age (en année) est `NUMBER`, ma requête est :  
+1. La moyenne d'age (en année) est `32.1878 ans`, ma requête est :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT AVG(YEAR(CURDATE()) - YEAR(birthdate)) AS 'average_age' FROM people;
   ```
-1. Le prénom le plus long est `TEXT`, ma requête est :  
+1. Le prénom le plus long est `Clementine`, ma requête est :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT *, LENGTH(firstname) AS 'lfname' FROM people ORDER BY lfname DESC LIMIT 1;
   ```
-1. Le nom de famille le plus long est `TEXT`, ma requête est:  
+1. Le nom de famille le plus long est `Christensen`, ma requête est:  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT *, LENGTH(lastname) AS 'length_lastname' FROM people ORDER BY length_lastname DESC LIMIT 1;
   ```
-1. La plus longue paire "nom + prénom" est `TEXT`, ma requête est :  
+1. La plus longue paire "nom + prénom" est `Cheyenne Pennington`, ma requête est :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT *, LENGTH(lastname) + LENGTH(firstname) AS 'length_both_names' FROM people ORDER BY length_both_names DESC LIMIT 1; 
   ```
-1. La table `people` contient `NUMBER` doublons, ma requête est :  
+1. La table `people` contient `10` doublons, ma requête est :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT COUNT(*) FROM (SELECT COUNT(*) AS x FROM people GROUP BY lastname, firstname, email, birthdate HAVING x > 1) AS y;
   ```
 
 ### Invitations
 
 1. Pour lister tous les membres de plus de 18 ans :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT * FROM people WHERE YEAR(CURDATE())-YEAR(birthdate) > 18;
   ```
 1. Pour lister tous les membres de plus de 18 ans et de moins de 60 ans :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT * FROM people WHERE YEAR(CURDATE())-YEAR(birthdate) > 18 AND YEAR(CURDATE())-YEAR(birthdate) < 60;
   ```
 1. Pour lister tous les membres de plus de 18 ans, de moins de 60 ans et qui 
    une addresse email valide :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT * FROM people WHERE YEAR(CURDATE())-YEAR(birthdate) > 18 AND YEAR(CURDATE())-YEAR(birthdate) < 60 AND email LIKE '%@%';
   ```
 1. Pour ajoutez une colonne `age` dans le résultat de la requête :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT *, YEAR(CURDATE())-YEAR(birthdate) AS age FROM people WHERE YEAR(CURDATE())-YEAR(birthdate) > 18 AND YEAR(CURDATE())-YEAR(birthdate) < 60 AND email LIKE '%@%';
   ```
 1. Pour générer un champs contenant `Prénom Nom <email@provider.com>;` :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT *, CONCAT(firstname, ' ', lastname, ' <', email, '>') FROM people WHERE YEAR(CURDATE())-YEAR(birthdate) > 18 AND YEAR(CURDATE())-YEAR(birthdate) < 60 AND email LIKE '%@%';
   ```
 1. Avec cette requête :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT COUNT(idperson) FROM countries_people WHERE idcountry IN (SELECT id FROM countries WHERE iso2 = 'CH');
   ```  
-  je peux estimer que `NUMBER` personnes habitent en Suisse.
+  je peux estimer que `371` personnes habitent en Suisse.
 
 ### Countries
 
 1. La requête qui permet d'obtenir la liste d'options sous la forme :  
    `<option value="XXX">XXX</option>` est :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  select concat('<option value="', id, '">', name_fr, '</option>') as 'option' from countries;
   ```
 1. Pour avoir la liste d'options en plusieurs langues, je procède de la manière 
    suivante :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT concat('<option value="', id, '">', IF(name_fr != name_en, CONCAT(name_en, ', ', name_fr), name_en), '</option>') AS 'option' FROM countries;
+
   ```
 
 ### Jointure
 
 1. Avec cette requête :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT COUNT(*) FROM (SELECT firstname, iso2 FROM countries_people 
+    INNER JOIN people ON countries_people.idperson = people.id 
+    INNER JOIN countries ON countries_people.idcountry = countries.id 
+    HAVING iso2 = 'CH'
+  ) AS nb;
   ```    
-   je sais que `NUMBER` personnes habitent en Suisse.
+   je sais que `371` personnes habitent en Suisse.
 1. Avec cette requête :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT COUNT(*) FROM (SELECT firstname, iso2 FROM countries_people 
+    INNER JOIN people ON countries_people.idperson = people.id 
+    INNER JOIN countries ON countries_people.idcountry = countries.id 
+    HAVING iso2 = 'CH'
+  ) AS nb;
   ```  
-   je sais que `NUMBER` personnes n'habitent pas en Suisse.
+   je sais que `43` personnes n'habitent pas en Suisse.
 1. Avec cette requête :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT firstname, lastname, name_fr FROM countries_people 
+    INNER JOIN people ON countries_people.idperson = people.id
+    INNER JOIN countries ON countries_people.idcountry = countries.id
+    WHERE name_fr IN ('France', 'Allemagne', 'Italie', 'Autriche', 'Lichtenstein');
   ```  
-  je liste (nom & prénom) les membres habitants de France, Allemagne, Italie,   Autriche et Lischenchtein.
+  je liste (nom & prénom) les membres habitants de France, Allemagne, Italie, Autriche et Lischenchtein.
 1. Cette requête :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  SELECT name_fr, count(name_fr) FROM countries_people 
+  	JOIN people ON countries_people.idperson = people.id
+  	JOIN countries ON countries_people.idcountry = countries.id
+  	GROUP BY name_fr;
   ```  
    permet de compter combien il y a de personnes par pays.
 1. Cette requête :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  select iso2 from countries where iso2 not in (
+    select     iso2 
+    from       countries 
+    inner join countries_people on id = idcountry 
+    group by countries.id);
   ```  
   liste les pays qui ne possèdent pas de personnes.
 1. En exécutant cette requête :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  select COUNT(*) as cnt, people.firstname, people.lastname from countries_people 
+  left join people on idperson = id
+  group by countries_people.idperson having cnt > 1;
   ```  
-   je sais que `NAME`, `NAME` et `NAME` sont liés à plusieurs pays.
+   je sais que `Dai Roth` et `Minerva Chaney` sont liés à plusieurs pays.
 1. En exécutant cette requête :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  select id from people p
+  left join countries_people cp on p.id = cp.idperson
+  where p.id not in (cp.idperson);
   ```  
-  je sais que `TEXT` parce que `TEXT`.
+  je sais qu'il n'y a personne qui n'est pas assigné à un pays.
 1. De la manière suivante :  
   ```sql
   SELECT somecolumns FROM sometable [...];

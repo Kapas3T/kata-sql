@@ -11,7 +11,7 @@
 
 SET NAMES utf8;
 
-DROP TABLE IF EXISTS `countries`;
+DROP TABLE IF EXISTS countries;
 CREATE TABLE `countries` (
  `id` int NOT NULL,
  `iso2` char(2) CHARACTER SET utf8 NOT NULL,

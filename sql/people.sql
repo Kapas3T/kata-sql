@@ -1,6 +1,6 @@
 SET NAMES utf8;
 
-DROP TABLE IF EXISTS `people`;
+DROP TABLE IF EXISTS people;
 CREATE TABLE `people` (
   `id` int NOT NULL AUTO_INCREMENT,
   `firstname` varchar(255) DEFAULT NULL,
