@@ -212,7 +212,11 @@ J'ai généré le schéma avec le `Diagram view` de DBeaver-CE :
   je sais qu'il n'y a personne qui n'est pas assigné à un pays.
 1. De la manière suivante :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  select c.id, c.iso2, concat(truncate((count(cp.idperson) / 414) * 100, 2), '%') as pourcentage
+  from countries c
+  left join countries_people cp on c.id = cp.idcountry
+  group by c.id 
+  order by nb_in_country desc;
   ```  
   nous pouvons afficher le pourcentage de personnes par pays.
 
@@ -221,46 +225,60 @@ J'ai généré le schéma avec le `Diagram view` de DBeaver-CE :
 
 1. Cette requête permet d'extraire le `tld` de l'adresse email et de le lier à la table `countries` :  
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  DELIMITER //
+  CREATE PROCEDURE TldWithCountry(IN p_email VARCHAR(255))
+  BEGIN
+    SELECT c.name_fr FROM countries c WHERE c.tld = REGEXP_SUBSTR(p_email, '\\.[a-zA-Z]{2,}$');
+  END //
+  DELIMITER ;
   ```  
 1. Pour ajouter une chaine si la jointure ne retourne rien, j'ai procédé de la manière suivante :  
-  `STRING`
+  `COALESCE()`
 1. Avec `STRING`, nous pouvons partager le mécanisme qui extrait le `tld`.
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  ?????
   ```
 
 ### Vue SQL
 
 1. J'ai créé une vue bien pratique contenant toutes les infomrations utiles à un humain. Ma requête est:  
   ```sql
-  CREATE viewsomething as somequery [...];
+  create view v_people as select p.id, p.firstname, p.lastname, p.email, c.iso2 as country
+  from countries_people cp, people p, countries c 
+  where p.id = cp.idperson and c.id = cp.idcountry;
   ```  
 1. Je peux exporter ma vue au format CSV avec la requête :
   ```sql
-  SELECT somecolumns FROM sometable [...];
+  je ne crois pas que ce soit possible avec du sql vanilla...
   ```
 
 ### Finances
 
 1. J'ai créé une table pour les finances. Ma requête est:  
   ```sql
-  CREATE sometable [...];
+  create table finances (
+	id INT auto_increment PRIMARY KEY,
+	idperson int not null,
+	amount decimal(7,2) not null,
+	description varchar(255),
+	expense_date date not null default (curdate()),
+	foreign key (idperson) references people(id));
   ```
 1. J'ai ajouté des données de test avec la reuêtes SQL suivante :  
    ```sql
-   INSERT INTO expenses [...];
+   insert into finances (idperson, amount, description) values(100, 354.75, 'Bouteille de champagne 2008');
    ```
 1. J'ai modifié la vue en y ajoutant les finances. Ma requête est:  
   ```sql
-  UPDATE someview [...];
+  CREATE OR REPLACE VIEW v_people AS
+  SELECT p.id, p.firstname, p.lastname, p.email, 
+      c.iso2        AS country, 
+      SUM(f.amount) AS 'total des dépenses'
+  FROM countries_people cp, people p, countries c, finances f
+  WHERE   p.id = cp.idperson 
+    AND c.id = cp.idcountry 
+    AND p.id = f.idperson
+  GROUP BY p.id;
+
   ```
 
-### Intégrité référentielle
-(WIP)
-1. Pour ajouter les clés étrangères, j'ai utilisé les requêtes suivantes :  
-  ```sql
-  ALTER sometable [...];
-  ALTER sometable [...];
-  ```
-1. J'ai du modifier les données de la table `NAME` parce que XXX.
